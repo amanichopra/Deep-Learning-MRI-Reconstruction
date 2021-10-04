@@ -2,3 +2,5 @@
 *.pickle
 .vscode/
 *.txt
+.env
+gen_weights/
