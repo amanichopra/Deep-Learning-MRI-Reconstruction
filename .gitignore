@@ -2,3 +2,4 @@
 *.pickle
 .vscode/
 *.txt
+Data/raw/
