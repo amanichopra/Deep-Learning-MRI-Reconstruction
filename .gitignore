@@ -5,3 +5,4 @@
 Data/raw/
 .env
 gen_weights/
+.DS_Store
