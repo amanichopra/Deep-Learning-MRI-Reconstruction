@@ -3,3 +3,5 @@
 .vscode/
 *.txt
 Data/raw/
+.env
+gen_weights/
