@@ -258,14 +258,15 @@ def configCLIArgparser():
     parser.add_argument('--data_path', type=str, help='Path to training data.', default='./data/training.pickle')
     parser.add_argument('--usam_path', type=str, help='Path to undersampled training data.', default='./data/training_usamp.pickle')
     parser.add_argument('--t_size', type=int, help='Number of images to train with.', default=10)
+    parser.add_argument('--epoch_end_im_save_path', type=str, help='Path to save images generated at end of each epoch.', default='./plots/training')
 
     args = parser.parse_args()
     args.in_shape_gen = tuple([int(dim) for dim in args.in_shape_gen.split(',')])
     args.in_shape_dis = tuple([int(dim) for dim in args.in_shape_dis.split(',')])
     args.log_device_placement = eval(args.log_device_placement)
     return args
-
-def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger):
+        
+def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger, im_save_path):
     bat_per_epo = int(dataset_real.shape[0]/n_batch)
     half_batch = int(n_batch/2)
     
@@ -299,6 +300,11 @@ def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_ba
             
             g_loss = gan_model.train_on_batch([X_gen_inp], [y_gan, X_r, X_r])
             logger.info(f'Epoch: {i+1}, Batch: {j + 1}/{bat_per_epo}, Disc Loss: {d_loss}, Accuracy: {accuracy},  Gen Loss: {g_loss[1]},  MAE: {g_loss[2]},  Gen Sim Loss: {g_loss[3]}, GAN Loss: {g_loss[0]}')
+            
+        logger.info(f'Saving example of image generated at end of epoch {i}...') 
+        plt.imsave(f'{im_save_path}/real_{i}.png', X_real[0][:, :, 0], cmap='gray')
+        plt.imsave(f'{im_save_path}/fake_{i}.png', X_fake[0][:, :, 0], cmap='gray')
+        
 
 def build_and_train(args, logger):
     if args.log_device_placement: tf.debugging.set_log_device_placement(True)
@@ -327,7 +333,7 @@ def build_and_train(args, logger):
     u_sampled_data_2c = np.concatenate((u_sampled_data.real, u_sampled_data.imag), axis = -1)
     
     logger.info('Starting training...')
-    train(g_model, d_model, gan_model, dataset_real, u_sampled_data_2c, args.n_epochs, args.n_batch, args.n_critic, args.clip_val, n_patch, logger)
+    train(g_model, d_model, gan_model, dataset_real, u_sampled_data_2c, args.n_epochs, args.n_batch, args.n_critic, args.clip_val, n_patch, logger, args.epoch_end_im_save_path)
     logger.info('Training complete!')
 
 if __name__ == '__main__':
