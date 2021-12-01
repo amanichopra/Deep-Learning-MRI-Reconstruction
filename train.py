@@ -249,7 +249,7 @@ def get_logger(path):
 def configCLIArgparser():
     parser = argparse.ArgumentParser(description='Traing GAN.')
     parser.add_argument('--n_epochs', type=int, help='Number of epochs to train.', default=300)
-    parser.add_argument('--n_batch', type=int, help='Number of batches used in training. Ensure this number is > than the number of samples!', default=32)
+    parser.add_argument('--n_batch', type=int, help='Number of batches used in training. Ensure this number is > than the number of samples!', default=10)
     parser.add_argument('--n_critic', type=int, help='Number of times to train discriminator/epoch.', default=3)
     parser.add_argument('--clip_val', type=float, help='Value to use for gradient clipping.', default=0.05)
     parser.add_argument('--in_shape_gen', type=str, help='Input shape for generator. Specify as a list of commas without spaces (ex. "256,256,2").', default='256,256,2')
@@ -268,8 +268,15 @@ def configCLIArgparser():
         
 def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger, im_save_path):
     bat_per_epo = int(dataset_real.shape[0]/n_batch)
+    if bat_per_epo == 0:
+        class InvalidNBatchArgumentException(Exception):
+            pass
+        raise InvalidNBatchArgumentException('--n_batch argument is invalid! Ensure this number is greater than the number of samples.')
+    
+    
     half_batch = int(n_batch/2)
-       
+    plt.imsave(f'{im_save_path}/real.png', dataset_real[0][:, :, 0], cmap='gray')    
+    plt.imsave(f'{im_save_path}/undersampled.png', u_sampled_data[0][:, :, 0], cmap='gray')   
     for i in range(n_epochs):
         for j in range(bat_per_epo):
             
@@ -301,9 +308,9 @@ def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_ba
             g_loss = gan_model.train_on_batch([X_gen_inp], [y_gan, X_r, X_r])
             logger.info(f'Epoch: {i+1}, Batch: {j + 1}/{bat_per_epo}, Disc Loss: {d_loss}, Accuracy: {accuracy},  Gen Loss: {g_loss[1]},  MAE: {g_loss[2]},  Gen Sim Loss: {g_loss[3]}, GAN Loss: {g_loss[0]}')
             
-        logger.info(f'Saving example of image generated at end of epoch {i}...') 
-        plt.imsave(f'{im_save_path}/real_{i}.png', X_real[0][:, :, 0], cmap='gray')
-        plt.imsave(f'{im_save_path}/fake_{i}.png', X_fake[0][:, :, 0], cmap='gray')
+        logger.info(f'Saving example of image generated at end of epoch {i+1}...') 
+        fake = g_par.predict(u_sampled_data[0][None, :, :, :])
+        plt.imsave(f'{im_save_path}/fake_{i+1}.png', fake[0, :, :, 0], cmap='gray')
         
 
 def build_and_train(args, logger):
@@ -341,7 +348,7 @@ def build_and_train(args, logger):
 if __name__ == '__main__':
     logger = get_logger('./logs')
     logger.info('Parsing CLI args...')
-    
     args = configCLIArgparser()
+    logger.info(f"CLI args parsed: {vars(args)}")
     build_and_train(args, logger)
     
