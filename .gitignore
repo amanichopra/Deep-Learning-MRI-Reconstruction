@@ -2,7 +2,7 @@
 *.pickle
 .vscode/
 *.txt
-Data/raw/
+data/raw/
 .env
 gen_weights/
 **/.DS_Store

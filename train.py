@@ -257,7 +257,7 @@ def configCLIArgparser():
     parser.add_argument('--log_device_placement', type=str, help='Boolean indicating whether to specify what device is being used for tensorflow operations.', default='False')
     parser.add_argument('--data_path', type=str, help='Path to training data.', default='./data/training.pickle')
     parser.add_argument('--usam_path', type=str, help='Path to undersampled training data.', default='./data/training_usamp.pickle')
-    parser.add_argument('--t_size', type=int, help='Number of images to train with.', default=10)
+    parser.add_argument('--t_size', type=int, help='Number of images to train with.', default=64)
     parser.add_argument('--epoch_end_im_save_path', type=str, help='Path to save images generated at end of each epoch.', default='./plots/training')
 
     args = parser.parse_args()
@@ -269,7 +269,7 @@ def configCLIArgparser():
 def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger, im_save_path):
     bat_per_epo = int(dataset_real.shape[0]/n_batch)
     half_batch = int(n_batch/2)
-    
+       
     for i in range(n_epochs):
         for j in range(bat_per_epo):
             
@@ -325,11 +325,13 @@ def build_and_train(args, logger):
     n_patch=d_model.output_shape[1]
     
     logger.info('Loading real dataset...')
-    dataset_real = pickle.load(open(args.data_path,'rb'))[args.t_size] # Ground truth
+    dataset_real = pickle.load(open(args.data_path,'rb'))[:args.t_size] # Ground truth
     dataset_real = dataset_real.reshape(-1, 256, 256, 1)
+    logger.info(f'Real dataset loaded with shape: {dataset_real.shape}...')
     logger.info('Loading undersampled dataset...')
-    u_sampled_data = pickle.load(open(args.usam_path,'rb'))[args.t_size]
+    u_sampled_data = pickle.load(open(args.usam_path,'rb'))[:args.t_size]
     u_sampled_data = u_sampled_data.reshape(-1, 256, 256, 1) # # Zero-filled reconstructions
+    logger.info(f'Unsampled dataset loaded with shape: {u_sampled_data.shape}...')
     u_sampled_data_2c = np.concatenate((u_sampled_data.real, u_sampled_data.imag), axis = -1)
     
     logger.info('Starting training...')
