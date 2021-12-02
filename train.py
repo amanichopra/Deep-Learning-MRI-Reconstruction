@@ -20,6 +20,7 @@ from tensorflow.keras.initializers import RandomNormal
 
 import logging
 import argparse
+import time
 
 # loss for discriminator
 def accw(y_true, y_pred):
@@ -259,6 +260,8 @@ def configCLIArgparser():
     parser.add_argument('--usam_path', type=str, help='Path to undersampled training data.', default='./data/training_usamp.pickle')
     parser.add_argument('--t_size', type=int, help='Number of images to train with.', default=64)
     parser.add_argument('--epoch_end_im_save_path', type=str, help='Path to save images generated at end of each epoch.', default='./plots/training')
+    parser.add_argument('--mod_save_path', type=str, help='Path to save best model based on metric to compare models.', default='./models')
+    parser.add_argument('--mod_compare_metric', type=str, choices=['disc_loss', 'gen_loss', 'mae', 'gen_sim_loss', 'gan_loss'], help='Metric to use to compare models for saving.', default='gen_sim_loss')
 
     args = parser.parse_args()
     args.in_shape_gen = tuple([int(dim) for dim in args.in_shape_gen.split(',')])
@@ -266,19 +269,24 @@ def configCLIArgparser():
     args.log_device_placement = eval(args.log_device_placement)
     return args
         
-def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger, im_save_path):
+def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_batch, n_critic, clip_val, n_patch, logger, im_save_path, mod_save_path, mod_compare_metric):
     bat_per_epo = int(dataset_real.shape[0]/n_batch)
     if bat_per_epo == 0:
         class InvalidNBatchArgumentException(Exception):
             pass
         raise InvalidNBatchArgumentException('--n_batch argument is invalid! Ensure this number is greater than the number of samples.')
     
+    d_loss = None
+    g_loss = [None, None, None, None]
+    mod_compare_metric_mapping = {'disc_loss': 'd_loss', 'gen_loss': 'g_loss[1]', 'mae': 'g_loss[2]', 'gen_sim_loss': 'g_loss[3]', 'gan_loss': 'g_loss[0]'}
     
     half_batch = int(n_batch/2)
     plt.imsave(f'{im_save_path}/real.png', dataset_real[0][:, :, 0], cmap='gray')    
     plt.imsave(f'{im_save_path}/undersampled.png', u_sampled_data[0][:, :, 0], cmap='gray')   
+    best_g_loss = float('inf')
     for i in range(n_epochs):
         for j in range(bat_per_epo):
+            start = time.time() # start time
             
             # training the discriminator
             for k in range(n_critic):
@@ -306,7 +314,14 @@ def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_ba
             y_gan = np.ones((n_batch,n_patch,n_patch,1))
             
             g_loss = gan_model.train_on_batch([X_gen_inp], [y_gan, X_r, X_r])
-            logger.info(f'Epoch: {i+1}, Batch: {j + 1}/{bat_per_epo}, Disc Loss: {d_loss}, Accuracy: {accuracy},  Gen Loss: {g_loss[1]},  MAE: {g_loss[2]},  Gen Sim Loss: {g_loss[3]}, GAN Loss: {g_loss[0]}')
+            end = time.time() # end time
+            logger.info(f'Epoch: {i+1}, Time: {(end-start)}, Batch: {j + 1}/{bat_per_epo}, Disc Loss: {d_loss}, Accuracy: {accuracy},  Gen Loss: {g_loss[1]},  MAE: {g_loss[2]},  Gen Sim Loss: {g_loss[3]}, GAN Loss: {g_loss[0]}')
+            if eval(mod_compare_metric_mapping[mod_compare_metric]) < best_g_loss: # save best model based on metric
+                logger.info(f'Saving model since {mod_compare_metric} is best so far...')
+                g_par.save(f'{mod_save_path}/G')
+                d_par.save(f'{mod_save_path}/D')
+                gan_model.save(f'{mod_save_path}/GAN')
+                
             
         logger.info(f'Saving example of image generated at end of epoch {i+1}...') 
         fake = g_par.predict(u_sampled_data[0][None, :, :, :])
@@ -342,7 +357,7 @@ def build_and_train(args, logger):
     u_sampled_data_2c = np.concatenate((u_sampled_data.real, u_sampled_data.imag), axis = -1)
     
     logger.info('Starting training...')
-    train(g_model, d_model, gan_model, dataset_real, u_sampled_data_2c, args.n_epochs, args.n_batch, args.n_critic, args.clip_val, n_patch, logger, args.epoch_end_im_save_path)
+    train(g_model, d_model, gan_model, dataset_real, u_sampled_data_2c, args.n_epochs, args.n_batch, args.n_critic, args.clip_val, n_patch, logger, args.epoch_end_im_save_path, args.mod_save_path, args.mod_compare_metric)
     logger.info('Training complete!')
 
 if __name__ == '__main__':
