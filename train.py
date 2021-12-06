@@ -284,6 +284,8 @@ def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_ba
     plt.imsave(f'{im_save_path}/real.png', dataset_real[0][:, :, 0], cmap='gray')    
     plt.imsave(f'{im_save_path}/undersampled.png', u_sampled_data[0][:, :, 0], cmap='gray')   
     best_g_loss = float('inf')
+    best_mod_weights = {'gen': None, 'disc': None, 'gan': None}
+		
     for i in range(n_epochs):
         for j in range(bat_per_epo):
             start = time.time() # start time
@@ -317,16 +319,25 @@ def train(g_par, d_par, gan_model, dataset_real, u_sampled_data,  n_epochs, n_ba
             end = time.time() # end time
             logger.info(f'Epoch: {i+1}, Time: {(end-start)}, Batch: {j + 1}/{bat_per_epo}, Disc Loss: {d_loss}, Accuracy: {accuracy},  Gen Loss: {g_loss[1]},  MAE: {g_loss[2]},  Gen Sim Loss: {g_loss[3]}, GAN Loss: {g_loss[0]}')
             if eval(mod_compare_metric_mapping[mod_compare_metric]) < best_g_loss: # save best model based on metric
-                logger.info(f'Saving model since {mod_compare_metric} is best so far...')
-                g_par.save(f'{mod_save_path}/G')
-                d_par.save(f'{mod_save_path}/D')
-                gan_model.save(f'{mod_save_path}/GAN')
+                best_g_loss = eval(mod_compare_metric_mapping[mod_compare_metric])
+                logger.info(f'Model has best performance so far based on {mod_compare_metric}...')
+                best_mod_weights['gen'] = g_par.get_weights()
+                best_mod_weights['disc'] = d_par.get_weights()
+                best_mod_weights['gan'] = gan_model.get_weights()
                 
             
         logger.info(f'Saving example of image generated at end of epoch {i+1}...') 
         fake = g_par.predict(u_sampled_data[0][None, :, :, :])
         plt.imsave(f'{im_save_path}/fake_{i+1}.png', fake[0, :, :, 0], cmap='gray')
-        
+    
+    logger.info('Saving best model after training...')
+    g_par.set_weights(best_mod_weights['gen'])
+    d_par.set_weights(best_mod_weights['disc'])
+    gan_model.set_weights(best_mod_weights['gan'])
+    
+    g_par.save(f'{mod_save_path}/G')
+    d_par.save(f'{mod_save_path}/D')
+    gan_model.save(f'{mod_save_path}/GAN')
 
 def build_and_train(args, logger):
     if args.log_device_placement: tf.debugging.set_log_device_placement(True)
