@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 2021-11-15 15:39:10,063 - root - INFO - Parsing CLI args...
 2021-11-15 15:39:10,064 - root - INFO - Building discriminator model...
 2021-11-15 15:39:10,441 - root - INFO - Building generator model...
@@ -3515,6 +3517,7 @@
 2021-12-02 15:35:43,620 - root - INFO - Epoch: 276, Time: 9.35880422592163, Batch: 2/2, Disc Loss: -16.35662269592285, Accuracy: 1.0,  Gen Loss: -53.37334060668945,  MAE: 12.200862884521484,  Gen Sim Loss: 0.8141369819641113, GAN Loss: 244.2976531982422
 2021-12-02 15:35:43,620 - root - INFO - Saving example of image generated at end of epoch 276...
 2021-12-02 15:35:53,137 - root - INFO - Epoch: 277, Time: 9.310599565505981, Batch: 1/2, Disc Loss: -16.354965209960938, Accuracy: 1.0,  Gen Loss: -52.57100296020508,  MAE: 11.899418830871582,  Gen Sim Loss: 0.6974262595176697, GAN Loss: 238.1601104736328
+>>>>>>> 0925e39aea6b229541e0c635a12cdb78336111cd
 2021-12-02 18:13:43,853 - root - INFO - Parsing CLI args...
 2021-12-02 18:13:43,855 - root - INFO - CLI args parsed: {'n_epochs': 300, 'n_batch': 10, 'n_critic': 3, 'clip_val': 0.05, 'in_shape_gen': (256, 256, 2), 'in_shape_dis': (256, 256, 1), 'log_device_placement': False, 'data_path': './data/training.pickle', 'usam_path': './data/training_usamp.pickle', 't_size': 64, 'epoch_end_im_save_path': './plots/training', 'mod_save_path': './models', 'mod_compare_metric': 'gen_sim_loss'}
 2021-12-02 18:13:43,855 - root - INFO - Building discriminator model...
@@ -4447,3 +4450,7 @@
 2021-12-02 19:46:44,442 - tensorflow - INFO - Assets written to: ./models/D/assets
 2021-12-02 19:48:25,848 - tensorflow - INFO - Assets written to: ./models/GAN/assets
 2021-12-02 19:48:29,215 - root - INFO - Training complete!
+<<<<<<< HEAD
+
+=======
+>>>>>>> 0925e39aea6b229541e0c635a12cdb78336111cd
