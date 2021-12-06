@@ -225,10 +225,13 @@ def define_gan_model(gen_model, dis_model, inp_shape):
     return model
 
 def get_logger(path):
+<<<<<<< HEAD
     # Ensure path/to/train.log doesn't exist
     if os.path.isfile(f'{path}/train.log'):
         os.remove(f'{path}/train.log')
     
+=======
+>>>>>>> 0925e39aea6b229541e0c635a12cdb78336111cd
     # Create a custom logger
     logger = logging.getLogger()
 

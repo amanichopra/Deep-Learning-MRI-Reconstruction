@@ -7,4 +7,7 @@ data/raw/
 gen_weights/
 **/.DS_Store
 models/
+<<<<<<< HEAD
 'plots/MRI Slices (Animation).ipynb'
+=======
+>>>>>>> 0925e39aea6b229541e0c635a12cdb78336111cd
