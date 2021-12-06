@@ -3,7 +3,7 @@
 In this repository, we will explore using deep neural networks to reconstruct MRI images as done in this [paper](https://arxiv.org/abs/1910.06067).
 
 Contributors: Aman Chopra, Nikhil D'Souza  
-Supervisors: Maxwell Jacobson, Gustavo Rodriguez
+Instructors: Maxwell Jacobson, Gustavo Rodriguez
 
 ## Preprocessing
 <img src="./assets/FastMRI workflow.svg" width="500">
